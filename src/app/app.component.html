@@ -1,3 +1,17 @@
 <h1>
-  {{title}}
+  Keyboard PCB generator
 </h1>
+<div>
+  <p>What switches do you want to use?</p>
+  <ng-container *ngFor="let keySwitch of availableSwitches">
+    <input type="radio" name="switch" [(ngModel)]="selectedSwitch" [value]="keySwitch.keySwitch"><label>{{keySwitch.label}}</label>
+  </ng-container>
+</div>
+<div>
+  <p>Copy your raw data layout from <a target="_blank" href="http://www.keyboard-layout-editor.com/">Keyboard Layout Editor</a></p>
+  <textarea #rawData placeholder="Enter your layout here"></textarea>
+</div>
+<div>
+  <button (click)="createPcbSuggestion(rawData.value)">Generate PCB</button>
+</div>
+<div id="pcb-output"></div>
