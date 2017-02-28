@@ -8,10 +8,14 @@
   </ng-container>
 </div>
 <div>
-  <p>Copy your raw data layout from <a target="_blank" href="http://www.keyboard-layout-editor.com/">Keyboard Layout Editor</a></p>
-  <textarea #rawData placeholder="Enter your layout here"></textarea>
+  <p>What unit size do you want to use?</p>
+  <input type="number" [(ngModel)]="unitSize"><span>mm</span>
 </div>
 <div>
-  <button (click)="createPcbSuggestion(rawData.value)">Generate PCB</button>
+  <p>Copy your raw data layout from <a target="_blank" href="http://www.keyboard-layout-editor.com/">Keyboard Layout Editor</a></p>
+  <textarea [(ngModel)]="rawData" placeholder="Enter your layout here"></textarea>
+</div>
+<div>
+  <button (click)="createPcbSuggestion()">Generate PCB</button>
 </div>
 <div id="pcb-output"></div>

@@ -1,6 +1,7 @@
 import { Switch } from './switch.domain';
 
 export const CHERRY_ML_SWITCH: Switch = {
+  gridCellSize: 60,
   holes: [
     { x: 3.5 * 4, y: 4 * 4, diameter: 1.4, to: 'diodeIn', type: 'connector'},
     { x: 7.5 * 4, y: 4 * 4, diameter: 1.4, name: 'col', to: 'col', type: 'connector'},
@@ -15,6 +16,7 @@ export const CHERRY_ML_SWITCH: Switch = {
 };
 
 export const CHERRY_MX_PCB_SWITCH: Switch  = {
+  gridCellSize: 60,
   holes: [
     { x: 9 * 4, y: 3 * 4, diameter: 1.5, name: 'col', type: 'connector'},
     { x: 4.5 * 4, y: 5 * 4, diameter: 1.5, name: 'toDiodeOut', type: 'connector'},
@@ -25,6 +27,7 @@ export const CHERRY_MX_PCB_SWITCH: Switch  = {
 };
 
 export const CHERRY_MX_PLATE_SWITCH: Switch  = {
+  gridCellSize: 60,
   holes: [
     { x: 9 * 4, y: 3 * 4, diameter: 1.5, name: 'col', type: 'connector'},
     { x: 4.5 * 4, y: 5 * 4, diameter: 1.5, name: 'toDiodeOut', type: 'connector'},
