@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CHERRY_ML_SWITCH, CHERRY_MX_PLATE_SWITCH, CHERRY_MX_PCB_SWITCH } from './switches/cherry-switches';
 import { SwitchHole } from './switches/switch-hole.domain';
 import { Switch } from './switches/switch.domain';
+import { RJSON } from '../../lib/@types/relaxed-json';
 
 type KeyboardMatrix = { [coordinate: string]: { hole: SwitchHole, row: number, col: number } };
 
