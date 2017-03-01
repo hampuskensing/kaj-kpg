@@ -18,10 +18,12 @@ export class Board {
   height: number = 0;
   decoratedDrillHoles: DecoratedSwitchHoles = [];
   keyLookup: any = {};
-  traceTaskQueue = [];
+  traceRowsQueue = [];
+  traceColsQueue = [];
   searchGraph: any;
 
   scaleFactor = 0;
+  private searchMatrix: { weight: number, owner?: Point }[][];
 
   constructor(rawData: KleData, unitSize: number, keySwitch: Switch) {
     this.scaleFactor = unitSize / keySwitch.gridCellSize;
@@ -125,41 +127,45 @@ export class Board {
         const holeTo = decoratedSwitchHole.hole.to;
         if (holeTo === 'row') {
           let holeToId = (col - 1) + ':' + row + ':row';
-          this.traceTaskQueue.push({ from: {x: x, y: y}, to: holeToId });
+          this.traceRowsQueue.push({ from: {x: x, y: y}, to: holeToId });
         } else if (holeTo === 'diodeIn') {
           let holeToId = (col) + ':' + row + ':diodeIn';
-          this.traceTaskQueue.push({ from: {x: x, y: y}, to: holeToId });
+          this.traceRowsQueue.push({ from: {x: x, y: y}, to: holeToId });
         } else if (holeTo === 'diodeOut') {
           let holeToId = (col) + ':' + row + ':diodeOut';
-          this.traceTaskQueue.push({ from: {x: x, y: y}, to: holeToId });
+          this.traceRowsQueue.push({ from: {x: x, y: y}, to: holeToId });
         } else if (holeTo === 'col') {
           let holeToId = (col) + ':' + (row + 1) + ':col';
-          this.traceTaskQueue.push({ from: {x: x, y: y}, to: holeToId });
+          this.traceColsQueue.push({ from: {x: x, y: y}, to: holeToId });
         }
       }
     });
   }
 
   private drawTraces(traces: SVGElement) {
-    this.traceTaskQueue.forEach((trace: any) => {
+    this.traceRowsQueue.concat(this.traceColsQueue).forEach((trace: any) => {
       if (this.keyLookup[trace.to]) {
 
         const start = this.searchGraph.grid[trace.from.x][trace.from.y];
         const end = this.searchGraph.grid[this.keyLookup[trace.to].x][this.keyLookup[trace.to].y];
 
-        const result = (<any>window).astar.search(this.searchGraph, start, end, { heuristic: (<any>window).astar.heuristics.diagonal });
+        const nodes = (<any>window).astar.search(this.searchGraph, start, end, { heuristic: (<any>window).astar.heuristics.diagonal });
+
+        this.addTraceToSearchGraph(nodes);
+
+        let linePoints = this.prepareNodesForLineDrawing(nodes);
 
         let line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         let pathString = '';
         pathString = pathString + 'M' + (trace.from.x * this.scaleFactor * (72/19.05)) + ' ' + (trace.from.y * this.scaleFactor * (72/19.05));
         pathString = pathString + ' L';
-        result.forEach((gridNode: any) => {
+        linePoints.forEach((gridNode: any) => {
           pathString = pathString + ' ' + (gridNode.x * this.scaleFactor * (72/19.05)) +
            ' ' + (gridNode.y * this.scaleFactor * (72/19.05));
         });
         line.setAttributeNS(null, 'd', pathString);
         line.setAttributeNS(null, 'fill', 'transparent');
-        line.setAttributeNS(null, 'stroke-width', '1mm');
+        line.setAttributeNS(null, 'stroke-width', '0.5mm');
         line.setAttributeNS(null, 'stroke', '#275520');
         traces.appendChild(line);
       }
@@ -167,20 +173,25 @@ export class Board {
   }
 
   private createSearchMatrix() {
-    const searchMatrix = [];
+    this.searchMatrix = [];
     for (let i = 0; i < this.width; i++) {
-      searchMatrix[i] = [];
+      this.searchMatrix[i] = [];
       for (let j = 0; j < this.height; j++) {
-        searchMatrix[i].push({ weight: 1 });
+        this.searchMatrix[i].push({ weight: 1 });
       }
     }
     this.decoratedDrillHoles.forEach((decoratedDrillHole) => {
       let x = decoratedDrillHole.coordinate.x;
       let y = decoratedDrillHole.coordinate.y;
       let padding = Math.floor(((decoratedDrillHole.hole.diameter / 2) + 1.5) / this.scaleFactor);
-      this.markHoleAndPad(x, y, padding, searchMatrix);
+      this.markHoleAndPad(x, y, padding, this.searchMatrix);
     });
-    this.searchGraph = new (<any>window).Graph(searchMatrix, { diagonals: true });
+    this.searchGraph = new (<any>window).Graph(this.searchMatrix, { diagonal: true });
+  }
+
+  private addTraceToSearchGraph(nodes: Point[]) {
+      nodes.forEach(node => this.searchMatrix[node.x][node.y].weight = 0);
+      this.searchGraph = new (<any>window).Graph(this.searchMatrix, { diagonal: true });
   }
 
   private markHoleAndPad(x, y, padding, searchMatrix) {
@@ -195,4 +206,27 @@ export class Board {
     }
   }
 
+  private prepareNodesForLineDrawing(nodes: any) {
+    let result = [];
+    for (let i = 0; i < nodes.length; i++) {
+      if (i === 0 || i === nodes.length-1) {
+        result.push(nodes[i]);
+      } else {
+        let pdx = nodes[i-1].x - nodes[i].x;
+        let pdy = nodes[i-1].y - nodes[i].y;
+        let ndx = nodes[i].x - nodes[i+1].x;
+        let ndy = nodes[i].y - nodes[i+1].y;
+        if (pdx === pdy && (pdx === 1 || pdx === -1)) {
+          console.log('a diagonal');
+        }
+
+        if (pdx === ndx && pdy === ndy) {
+          continue;
+        } else {
+          result.push(nodes[i]);
+        }
+      }
+    }
+    return result;
+  }
 }

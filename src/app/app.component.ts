@@ -18,7 +18,7 @@ export class AppComponent {
 
   selectedSwitch = CHERRY_ML_SWITCH;
   unitSize: number = 19.05;
-  rawData: any = '["A","B"], [{x: 0.25}, "C", "D"]';
+  rawData: any = '["A"], ["C"]';
 
   createPcbSuggestion(rawData: any) {
     this.removeOldBoards();
