@@ -19,6 +19,7 @@ export class Board {
   decoratedDrillHoles: DecoratedSwitchHoles = [];
   keyLookup: any = {};
   traceTaskQueue = [];
+  searchGraph: any;
 
   scaleFactor = 0;
 
@@ -27,6 +28,8 @@ export class Board {
     this.height = rawData.length * keySwitch.gridCellSize;
 
     this.populateDrillHoles(rawData, keySwitch);
+    this.createSearchMatrix();
+
   }
 
   createSvg() {
@@ -36,15 +39,15 @@ export class Board {
     svg.setAttribute('viewport', '0 0 ' + (this.width * this.scaleFactor) + ' ' + (this.height * this.scaleFactor));
     const boardSvg = this.drawBoard({ width: this.width, height: this.height });
     const solderingPads = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    // const traces = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const traces = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     const drillHoles = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     svg.appendChild(boardSvg);
+    svg.appendChild(traces);
     svg.appendChild(solderingPads);
-    // svg.appendChild(traces);
     svg.appendChild(drillHoles);
 
     this.drawDrillHoles(drillHoles, solderingPads);
-    // this.drawTraces(traces);
+    this.drawTraces(traces);
     return svg;
   }
 
@@ -140,19 +143,56 @@ export class Board {
   private drawTraces(traces: SVGElement) {
     this.traceTaskQueue.forEach((trace: any) => {
       if (this.keyLookup[trace.to]) {
+
+        const start = this.searchGraph.grid[trace.from.x][trace.from.y];
+        const end = this.searchGraph.grid[this.keyLookup[trace.to].x][this.keyLookup[trace.to].y];
+
+        const result = (<any>window).astar.search(this.searchGraph, start, end, { heuristic: (<any>window).astar.heuristics.diagonal });
+
         let line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         let pathString = '';
         pathString = pathString + 'M' + (trace.from.x * this.scaleFactor * (72/19.05)) + ' ' + (trace.from.y * this.scaleFactor * (72/19.05));
-        pathString = pathString + ' ';
-        pathString = pathString + 'L' + (this.keyLookup[trace.to].x * this.scaleFactor * (72/19.05)) +
-          ' ' + (this.keyLookup[trace.to].y * this.scaleFactor * (72/19.05));
+        pathString = pathString + ' L';
+        result.forEach((gridNode: any) => {
+          pathString = pathString + ' ' + (gridNode.x * this.scaleFactor * (72/19.05)) +
+           ' ' + (gridNode.y * this.scaleFactor * (72/19.05));
+        });
         line.setAttributeNS(null, 'd', pathString);
         line.setAttributeNS(null, 'fill', 'transparent');
         line.setAttributeNS(null, 'stroke-width', '1mm');
-        line.setAttributeNS(null, 'stroke', '#F7BD13');
+        line.setAttributeNS(null, 'stroke', '#275520');
         traces.appendChild(line);
       }
     });
+  }
+
+  private createSearchMatrix() {
+    const searchMatrix = [];
+    for (let i = 0; i < this.width; i++) {
+      searchMatrix[i] = [];
+      for (let j = 0; j < this.height; j++) {
+        searchMatrix[i].push({ weight: 1 });
+      }
+    }
+    this.decoratedDrillHoles.forEach((decoratedDrillHole) => {
+      let x = decoratedDrillHole.coordinate.x;
+      let y = decoratedDrillHole.coordinate.y;
+      let padding = Math.floor(((decoratedDrillHole.hole.diameter / 2) + 1.5) / this.scaleFactor);
+      this.markHoleAndPad(x, y, padding, searchMatrix);
+    });
+    this.searchGraph = new (<any>window).Graph(searchMatrix, { diagonals: true });
+  }
+
+  private markHoleAndPad(x, y, padding, searchMatrix) {
+    for (let hor = x + 1 - padding; hor < x+padding; hor++) {
+      if (searchMatrix[hor]) {
+        for (let ver = y + 1 - padding; ver < y+padding; ver++) {
+          if (searchMatrix[hor][ver]) {
+            searchMatrix[hor][ver] = { weight: 0, owner: { x: x, y: y }};
+          }
+        }
+      }
+    }
   }
 
 }

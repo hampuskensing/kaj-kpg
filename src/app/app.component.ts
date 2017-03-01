@@ -23,7 +23,7 @@ export class AppComponent {
   createPcbSuggestion(rawData: any) {
     this.removeOldBoards();
 
-    const board = new Board(RJSON.parse('[' + this.rawData + ']'),
+    const board = new Board((<any>window).RJSON.parse('[' + this.rawData + ']'),
                             this.unitSize,
                             this.selectedSwitch);
 
