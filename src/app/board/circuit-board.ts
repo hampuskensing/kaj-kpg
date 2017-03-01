@@ -73,7 +73,7 @@ export class CircuitBoard {
 
         if (typeof potentialKey === 'string') {
           keySwitch.holes.forEach((switchHole) => {
-            const coordinate = { x: currentXPosition + switchHole.x, y: currentYPosition + switchHole.y };
+            const coordinate = { x: currentXPosition + (((currentSwitchUnit-1)/2) * keySwitch.gridCellSize) + switchHole.x, y: currentYPosition + switchHole.y };
             this.decoratedDrillHoles.push({
               hole: switchHole,
               switchPosition: { col: colNumber, row: rowNumber },
@@ -88,6 +88,7 @@ export class CircuitBoard {
             }
           });
           currentXPosition += currentSwitchUnit * keySwitch.gridCellSize;
+          currentSwitchUnit = 1;
           colNumber++;
         } else if (typeof potentialKey === 'object') {
           if (potentialKey.w) {
@@ -169,8 +170,8 @@ export class CircuitBoard {
   }
 
   private addTraceToSearchGraph(nodes: Point[]) {
-      nodes.forEach(node => this.searchMatrix[node.x][node.y].weight = 0);
-      this.searchGraph = new (<any>window).Graph(this.searchMatrix, { diagonal: true });
+    nodes.forEach(node => this.searchMatrix[node.x][node.y].weight = 0);
+    this.searchGraph = new (<any>window).Graph(this.searchMatrix, { diagonal: true });
   }
 
   private markHoleAndPad(x, y, padding, searchMatrix) {

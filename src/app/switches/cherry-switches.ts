@@ -1,36 +1,38 @@
 import { Switch } from './switch.domain';
 
+const multiplyingFactor = 8;
+
 export const CHERRY_ML_SWITCH: Switch = {
-  gridCellSize: 60,
+  gridCellSize: 15 * multiplyingFactor,
   holes: [
-    { x: 3.5 * 4, y: 4 * 4, diameter: 1.4, to: 'diodeIn', type: 'connector'},
-    { x: 7.5 * 4, y: 4 * 4, diameter: 1.4, name: 'col', to: 'col', type: 'connector'},
-    { x: 11.5 * 4, y: 4 * 4, diameter: 1.4, name: 'row', type: 'connector'},
-    { x: 7.5 * 4, y: 11 * 4, diameter: 1.5, to: 'diodeOut', type: 'connector'},
-    { x: 1.5 * 4, y: 4 * 4, diameter: 1.5, name: 'diodeIn', to: 'row', type: 'connector'},
-    { x: 1.5 * 4, y: 11 * 4, diameter: 1.5, name: 'diodeOut', type: 'connector'},
-    { x: 3.5 * 4, y: 7 * 4, diameter: 1.5, type: 'fastener'},
-    { x: 7.5 * 4, y: 7 * 4, diameter: 2.6, type: 'fastener'},
-    { x: 11.5 * 4, y: 7 * 4, diameter: 1.5, type: 'fastener'}
+    { x: 3.5 * multiplyingFactor, y: 4 * multiplyingFactor, diameter: 1.4, to: 'diodeIn', type: 'connector'},
+    { x: 7.5 * multiplyingFactor, y: 4 * multiplyingFactor, diameter: 1.4, name: 'col', to: 'col', type: 'connector'},
+    { x: 11.5 * multiplyingFactor, y: 4 * multiplyingFactor, diameter: 1.4, name: 'row', type: 'connector'},
+    { x: 7.5 * multiplyingFactor, y: 11 * multiplyingFactor, diameter: 1.5, to: 'diodeOut', type: 'connector'},
+    { x: 1.5 * multiplyingFactor, y: 5 * multiplyingFactor, diameter: 1.5, name: 'diodeIn', to: 'row', type: 'connector'},
+    { x: 1.5 * multiplyingFactor, y: 10 * multiplyingFactor, diameter: 1.5, name: 'diodeOut', type: 'connector'},
+    { x: 3.5 * multiplyingFactor, y: 7 * multiplyingFactor, diameter: 1.5, type: 'fastener'},
+    { x: 7.5 * multiplyingFactor, y: 7 * multiplyingFactor, diameter: 2.6, type: 'fastener'},
+    { x: 11.5 * multiplyingFactor, y: 7 * multiplyingFactor, diameter: 1.5, type: 'fastener'}
   ]
 };
 
 export const CHERRY_MX_PCB_SWITCH: Switch  = {
-  gridCellSize: 60,
+  gridCellSize: 15 * multiplyingFactor,
   holes: [
-    { x: 9 * 4, y: 3 * 4, diameter: 1.5, name: 'col', type: 'connector'},
-    { x: 4.5 * 4, y: 5 * 4, diameter: 1.5, name: 'toDiodeOut', type: 'connector'},
-    { x: 3.5 * 4, y: 7 * 4, diameter: 1, type: 'fastener'},
-    { x: 7.5 * 4, y: 7 * 4, diameter: 4, type: 'fastener'},
-    { x: 11.5 * 4, y: 7 * 4, diameter: 1, type: 'fastener'},
+    { x: 9 * multiplyingFactor, y: 3 * multiplyingFactor, diameter: 1.5, name: 'col', type: 'connector'},
+    { x: 4.5 * multiplyingFactor, y: 5 * multiplyingFactor, diameter: 1.5, name: 'toDiodeOut', type: 'connector'},
+    { x: 3.5 * multiplyingFactor, y: 7 * multiplyingFactor, diameter: 1, type: 'fastener'},
+    { x: 7.5 * multiplyingFactor, y: 7 * multiplyingFactor, diameter: 4, type: 'fastener'},
+    { x: 11.5 * multiplyingFactor, y: 7 * multiplyingFactor, diameter: 1, type: 'fastener'},
   ]
 };
 
 export const CHERRY_MX_PLATE_SWITCH: Switch  = {
-  gridCellSize: 60,
+  gridCellSize: 15,
   holes: [
-    { x: 9 * 4, y: 3 * 4, diameter: 1.5, name: 'col', type: 'connector'},
-    { x: 4.5 * 4, y: 5 * 4, diameter: 1.5, name: 'toDiodeOut', type: 'connector'},
-    { x: 7.5 * 4, y: 7 * 4, diameter: 4, name: '', type: 'fastener'}
+    { x: 9 * multiplyingFactor, y: 3 * multiplyingFactor, diameter: 1.5, name: 'col', type: 'connector'},
+    { x: 4.5 * multiplyingFactor, y: 5 * multiplyingFactor, diameter: 1.5, name: 'toDiodeOut', type: 'connector'},
+    { x: 7.5 * multiplyingFactor, y: 7 * multiplyingFactor, diameter: 4, name: '', type: 'fastener'}
   ]
 };
