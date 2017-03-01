@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { CHERRY_ML_SWITCH, CHERRY_MX_PLATE_SWITCH, CHERRY_MX_PCB_SWITCH } from './switches/cherry-switches';
 import { Switch } from './switches/switch.domain';
-import { Board } from './board/board';
+import { CircuitBoard } from './board/circuit-board';
+import { SvgGenerator } from './svg-generator.service';
 
 @Component({
   selector: 'app-root',
@@ -20,14 +21,16 @@ export class AppComponent {
   unitSize: number = 19.05;
   rawData: any = '["A"], ["C"]';
 
+  constructor(private svgBuilder: SvgGenerator) {}
+
   createPcbSuggestion(rawData: any) {
     this.removeOldBoards();
 
-    const board = new Board((<any>window).RJSON.parse('[' + this.rawData + ']'),
+    const circuitBoard = new CircuitBoard((<any>window).RJSON.parse('[' + this.rawData + ']'),
                             this.unitSize,
                             this.selectedSwitch);
 
-    const svg = board.createSvg();
+    const svg = this.svgBuilder.createSvg(circuitBoard);
     document.getElementById('pcb-output').appendChild(svg);
   }
 
