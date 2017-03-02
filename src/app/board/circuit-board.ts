@@ -170,8 +170,9 @@ export class CircuitBoard {
   }
 
   private addTraceToSearchGraph(nodes: Point[]) {
-    nodes.forEach(node => this.searchMatrix[node.x][node.y].weight = 0);
-    this.searchGraph = new (<any>window).Graph(this.searchMatrix, { diagonal: true });
+    // nodes.forEach(node => this.searchMatrix[node.x][node.y].weight = 0);
+    // this.searchGraph = new (<any>window).Graph(this.searchMatrix, { diagonal: true });
+    nodes.forEach(node => this.searchGraph.grid[node.x][node.y].weight = 0);
   }
 
   private markHoleAndPad(x, y, padding, searchMatrix) {
