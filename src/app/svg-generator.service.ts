@@ -9,10 +9,11 @@ export class SvgGenerator {
     const height = circuitBoard.getHeight();
     const scaleFactor = circuitBoard.getScaleFactor();
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', (width * scaleFactor) + 'mm');
-    svg.setAttribute('height', (height * scaleFactor) + 'mm');
-    svg.setAttribute('viewport', '0 0 ' + (width * scaleFactor) + ' ' + (height * scaleFactor));
-    const boardSvg = this.drawBoard({ width: width, height: height });
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttributeNS(null, 'width', (width * scaleFactor) + 'mm');
+    svg.setAttributeNS(null, 'height', (height * scaleFactor) + 'mm');
+    svg.setAttributeNS(null, 'viewBox', '0 0 ' + (width * scaleFactor) + ' ' + (height * scaleFactor));
+    const boardSvg = this.drawBoard({ width: width * scaleFactor, height: height * scaleFactor });
     const solderingPadsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     const tracesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     const drillHolesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -29,8 +30,8 @@ export class SvgGenerator {
 
   private drawBoard(pcbSize: { width: number, height: number }) {
     const board = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    board.setAttributeNS(null, 'width', pcbSize.width + 'mm');
-    board.setAttributeNS(null, 'height', pcbSize.height + 'mm');
+    board.setAttributeNS(null, 'width', pcbSize.width + '');
+    board.setAttributeNS(null, 'height', pcbSize.height + '');
     board.setAttributeNS(null, 'fill', '#3a6629');
     return board;
   }
@@ -40,9 +41,9 @@ export class SvgGenerator {
       const x = decoratedSwitchHole.coordinate.x;
       const y = decoratedSwitchHole.coordinate.y;
       const drillHole = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      drillHole.setAttributeNS(null, 'cx', (scaleFactor * x) + 'mm');
-      drillHole.setAttributeNS(null, 'cy', (scaleFactor * y) + 'mm');
-      drillHole.setAttributeNS(null, 'r', decoratedSwitchHole.hole.diameter / 2 + 'mm');
+      drillHole.setAttributeNS(null, 'cx', (scaleFactor * x) + '');
+      drillHole.setAttributeNS(null, 'cy', (scaleFactor * y) + '');
+      drillHole.setAttributeNS(null, 'r', decoratedSwitchHole.hole.diameter / 2 + '');
       drillHole.setAttributeNS(null, 'fill', '#ffffff');
       drillHolesGroup.appendChild(drillHole);
     });
@@ -51,9 +52,9 @@ export class SvgGenerator {
   private drawSolderingPads(solderingPadsGroup: SVGElement, solderingPads: any, scaleFactor) {
     solderingPads.forEach((solderingPad) => {
       const solderingPadCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      solderingPadCircle.setAttributeNS(null, 'cx', (scaleFactor * solderingPad.coordinate.x) + 'mm');
-      solderingPadCircle.setAttributeNS(null, 'cy', (scaleFactor * solderingPad.coordinate.y) + 'mm');
-      solderingPadCircle.setAttributeNS(null, 'r', (solderingPad.hole.diameter + 1) / 2 + 'mm');
+      solderingPadCircle.setAttributeNS(null, 'cx', (scaleFactor * solderingPad.coordinate.x) + '');
+      solderingPadCircle.setAttributeNS(null, 'cy', (scaleFactor * solderingPad.coordinate.y) + '');
+      solderingPadCircle.setAttributeNS(null, 'r', (solderingPad.hole.diameter + 1) / 2 + '');
       solderingPadCircle.setAttributeNS(null, 'fill', '#F7BD13');
       solderingPadsGroup.appendChild(solderingPadCircle);
     });
@@ -61,20 +62,23 @@ export class SvgGenerator {
 
   private drawTraces(tracesGroup: SVGElement, traces: any, scaleFactor: number) {
     traces.forEach((traceNodes) => {
+      if (traceNodes.length === 0) {
+        return;
+      }
       let linePoints = this.prepareNodesForLineDrawing(traceNodes);
 
       let first = linePoints.shift();
       let line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       let pathString = '';
-      pathString = pathString + 'M' + (first.x * scaleFactor * (72/19.05)) + ' ' + (first.y * scaleFactor * (72/19.05));
+      pathString = pathString + 'M' + (first.x * scaleFactor) + ' ' + (first.y * scaleFactor);
       pathString = pathString + ' L';
       linePoints.forEach((gridNode: any) => {
-        pathString = pathString + ' ' + (gridNode.x * scaleFactor * (72/19.05)) +
-          ' ' + (gridNode.y * scaleFactor * (72/19.05));
+        pathString = pathString + ' ' + (gridNode.x * scaleFactor) +
+          ' ' + (gridNode.y * scaleFactor);
       });
       line.setAttributeNS(null, 'd', pathString);
       line.setAttributeNS(null, 'fill', 'transparent');
-      line.setAttributeNS(null, 'stroke-width', '0.5mm');
+      line.setAttributeNS(null, 'stroke-width', '1');
       line.setAttributeNS(null, 'stroke', '#275520');
       tracesGroup.appendChild(line);
     });
@@ -90,9 +94,6 @@ export class SvgGenerator {
         let pdy = nodes[i-1].y - nodes[i].y;
         let ndx = nodes[i].x - nodes[i+1].x;
         let ndy = nodes[i].y - nodes[i+1].y;
-        if (pdx === pdy && (pdx === 1 || pdx === -1)) {
-          console.log('a diagonal');
-        }
 
         if (pdx === ndx && pdy === ndy) {
           continue;

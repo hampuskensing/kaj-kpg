@@ -16,6 +16,8 @@ export class CircuitBoard {
 
   private width: number = 0;
   private height: number = 0;
+  private numRows: number = 0;
+  private numCols: number = 0;
   private decoratedDrillHoles: DecoratedSwitchHoles = [];
   private solderPads: any = [];
   private traces: any = [];
@@ -23,6 +25,7 @@ export class CircuitBoard {
   private keyLookup: any = {};
   private traceRowsQueue = [];
   private traceColsQueue = [];
+  private traceControllerConnectorsQueue = [];
   private searchGraph: any;
 
   private scaleFactor = 0;
@@ -30,9 +33,11 @@ export class CircuitBoard {
 
   constructor(rawData: KleData, unitSize: number, keySwitch: Switch) {
     this.scaleFactor = unitSize / keySwitch.gridCellSize;
+    this.numRows = rawData.length;
     this.height = rawData.length * keySwitch.gridCellSize;
 
     this.createDrillHolesAndSolderPads(rawData, keySwitch);
+    // this.createControllerConnectorPads();
     this.prepareTraceQueue();
     this.createSearchMatrix();
     this.calculateTraces();
@@ -87,9 +92,9 @@ export class CircuitBoard {
               });
             }
           });
+          colNumber++;
           currentXPosition += currentSwitchUnit * keySwitch.gridCellSize;
           currentSwitchUnit = 1;
-          colNumber++;
         } else if (typeof potentialKey === 'object') {
           if (potentialKey.w) {
             currentSwitchUnit = potentialKey.w;
@@ -98,7 +103,9 @@ export class CircuitBoard {
             currentXPosition += keySwitch.gridCellSize * potentialKey.x;
           }
         }
-
+        if (colNumber > this.numCols) {
+          this.numCols = colNumber;
+        }
         if (currentXPosition > this.width) {
           this.width = currentXPosition;
         }
@@ -106,6 +113,20 @@ export class CircuitBoard {
       currentYPosition += keySwitch.gridCellSize;
       currentXPosition = 0;
     });
+  }
+
+  private createControllerConnectorPads() {
+    for (let i = 0; i < this.numRows; i++) {
+      const x = 12;
+      const y = this.height / 4 - (this.numRows * 36 / 2) + (36 * i);
+      this.solderPads.push({
+        hole: { diameter: 1.5 },
+        switchPosition: { col: -1, row: -1 },
+        coordinate: { x: x, y: y }
+      });
+      let holeToId = 0 + ':' + i + ':diodeIn';
+      this.traceControllerConnectorsQueue.push({ from: { x: x, y: y }, to: holeToId });
+    }
   }
 
   private prepareTraceQueue() {
@@ -138,18 +159,29 @@ export class CircuitBoard {
 
   private calculateTraces() {
     this.traces = [];
-    this.traceRowsQueue.concat(this.traceColsQueue).forEach((trace: any) => {
+    const traceWarnings = [];
+    this.traceRowsQueue.concat(this.traceColsQueue).concat(this.traceControllerConnectorsQueue).forEach((trace: any) => {
       if (this.keyLookup[trace.to]) {
 
         const start = this.searchGraph.grid[trace.from.x][trace.from.y];
         const end = this.searchGraph.grid[this.keyLookup[trace.to].x][this.keyLookup[trace.to].y];
 
         const nodes = (<any>window).astar.search(this.searchGraph, start, end, { heuristic: (<any>window).astar.heuristics.diagonal });
+
+        if (nodes.length === 0) {
+          traceWarnings.push(trace);
+        }
+
         this.traces.push(nodes);
 
         this.addTraceToSearchGraph(nodes);
+      } else {
+        console.log('There was no target', trace.to);
       }
     });
+    if (traceWarnings.length > 0) {
+      alert('Unable to find traces:\n\n' + JSON.stringify(traceWarnings));
+    }
   }
 
   private createSearchMatrix() {
@@ -163,24 +195,40 @@ export class CircuitBoard {
     this.decoratedDrillHoles.forEach((decoratedDrillHole) => {
       let x = decoratedDrillHole.coordinate.x;
       let y = decoratedDrillHole.coordinate.y;
-      let padding = Math.floor(((decoratedDrillHole.hole.diameter / 2) + 1.5) / this.scaleFactor);
-      this.markHoleAndPad(x, y, padding, this.searchMatrix);
+      let margin;
+      if (decoratedDrillHole.hole.type === 'connector') {
+        margin = Math.floor(((decoratedDrillHole.hole.diameter / 2) + 1.8) / this.scaleFactor);
+      } else {
+        margin = Math.floor(((decoratedDrillHole.hole.diameter / 2) + 1.5) / this.scaleFactor);
+      }
+      this.markHoleAndPad(x, y, margin, this.searchMatrix);
     });
     this.searchGraph = new (<any>window).Graph(this.searchMatrix, { diagonal: true });
   }
 
   private addTraceToSearchGraph(nodes: Point[]) {
     // nodes.forEach(node => this.searchMatrix[node.x][node.y].weight = 0);
+    // nodes.forEach((node) => {
+    //   this.markHoleAndPad(node.x, node.y, Math.floor(1.5 / this.scaleFactor), this.searchMatrix, true);
+    // });
     // this.searchGraph = new (<any>window).Graph(this.searchMatrix, { diagonal: true });
-    nodes.forEach(node => this.searchGraph.grid[node.x][node.y].weight = 0);
+
+    // Modify grid within searchGraph to increase performance a hundredfold. Beware for the bugs
+    nodes.forEach((node) => {
+      this.markHoleAndPad(node.x, node.y, Math.floor(1.5 / this.scaleFactor), this.searchGraph.grid, true);
+    });
   }
 
-  private markHoleAndPad(x, y, padding, searchMatrix) {
-    for (let hor = x + 1 - padding; hor < x+padding; hor++) {
+  private markHoleAndPad(x: number, y: number, margin: number, searchMatrix: any, skipOwner?: boolean) {
+    for (let hor = x + 1 - margin; hor < x + margin; hor++) {
       if (searchMatrix[hor]) {
-        for (let ver = y + 1 - padding; ver < y+padding; ver++) {
+        for (let ver = y + 1 - margin; ver < y + margin; ver++) {
           if (searchMatrix[hor][ver]) {
-            searchMatrix[hor][ver] = { weight: 0, owner: { x: x, y: y }};
+            if (skipOwner) {
+              searchMatrix[hor][ver].weight = 0;
+            } else {
+              searchMatrix[hor][ver] = { weight: 0, owner: x + ':' + y };
+            }
           }
         }
       }
