@@ -37,7 +37,7 @@ export class CircuitBoard {
     this.height = rawData.length * keySwitch.gridCellSize;
 
     this.createDrillHolesAndSolderPads(rawData, keySwitch);
-    // this.createControllerConnectorPads();
+    this.createControllerConnectorPads(keySwitch);
     this.prepareTraceQueue();
     this.createSearchMatrix();
     this.calculateTraces();
@@ -115,16 +115,27 @@ export class CircuitBoard {
     });
   }
 
-  private createControllerConnectorPads() {
+  private createControllerConnectorPads(keySwitch: Switch) {
     for (let i = 0; i < this.numRows; i++) {
       const x = 12;
-      const y = this.height / 4 - (this.numRows * 36 / 2) + (36 * i);
+      const y = keySwitch.gridCellSize * i + 12;
       this.solderPads.push({
         hole: { diameter: 1.5 },
         switchPosition: { col: -1, row: -1 },
         coordinate: { x: x, y: y }
       });
       let holeToId = 0 + ':' + i + ':diodeIn';
+      this.traceControllerConnectorsQueue.push({ from: { x: x, y: y }, to: holeToId });
+    }
+    for (let i = 0; i < this.numCols; i++) {
+      const x = keySwitch.gridCellSize * i + keySwitch.gridCellSize / 2;
+      const y = 12;
+      this.solderPads.push({
+        hole: { diameter: 1.5 },
+        switchPosition: { col: -1, row: -1 },
+        coordinate: { x: x, y: y }
+      });
+      let holeToId = i + ':' + 0 + ':col';
       this.traceControllerConnectorsQueue.push({ from: { x: x, y: y }, to: holeToId });
     }
   }
