@@ -116,16 +116,18 @@ export class CircuitBoard {
   }
 
   private createControllerConnectorPads(keySwitch: Switch) {
-    for (let i = 0; i < this.numRows; i++) {
-      const x = 12;
-      const y = keySwitch.gridCellSize * i + 12;
-      this.solderPads.push({
-        hole: { diameter: 1.5 },
-        switchPosition: { col: -1, row: -1 },
-        coordinate: { x: x, y: y }
-      });
-      let holeToId = 0 + ':' + i + ':diodeIn';
-      this.traceControllerConnectorsQueue.push({ from: { x: x, y: y }, to: holeToId });
+    if (keySwitch.name === 'ML_PCB') {
+      for (let i = 0; i < this.numRows; i++) {
+        const x = 12;
+        const y = keySwitch.gridCellSize * i + 12;
+        this.solderPads.push({
+          hole: { diameter: 1.5 },
+          switchPosition: { col: -1, row: -1 },
+          coordinate: { x: x, y: y }
+        });
+        let holeToId = 0 + ':' + i + ':diodeIn';
+        this.traceControllerConnectorsQueue.push({ from: { x: x, y: y }, to: holeToId });
+      }
     }
     for (let i = 0; i < this.numCols; i++) {
       const x = keySwitch.gridCellSize * i + keySwitch.gridCellSize / 2;
@@ -207,6 +209,7 @@ export class CircuitBoard {
       let x = decoratedDrillHole.coordinate.x;
       let y = decoratedDrillHole.coordinate.y;
       let margin;
+      let extra = 3.2;
       if (decoratedDrillHole.hole.type === 'connector') {
         margin = Math.floor(((decoratedDrillHole.hole.diameter / 2) + 1.8) / this.scaleFactor);
       } else {
